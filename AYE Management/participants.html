@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Participants - AYE Management</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <a href="index.html">AYE Management</a>
+            </div>
+            <div class="nav-links">
+                <a href="dashboard.html" class="nav-button">Dashboard</a>
+                <a href="participants.html" class="nav-button active">Participants</a>
+                <a href="finance.html" class="nav-button">Finance</a>
+                <a href="analytics.html" class="nav-button">Analytics</a>
+                <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">
+                    <span class="theme-icon">◐</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="page-main">
+        <div class="page-header">
+            <div class="header-content">
+                <h1>Participant Management</h1>
+                <p>Manage and track all programme participants</p>
+            </div>
+            <div class="header-actions">
+                <div class="search-container">
+                    <input type="text" id="searchParticipants" placeholder="Search participants..." class="search-input" onkeyup="filterParticipants()">
+                    <button class="search-toggle-btn" onclick="toggleSearch()">Search</button>
+                </div>
+                <button class="action-btn primary" onclick="showAddParticipantModal()">
+                    Add Participant
+                </button>
+            </div>
+        </div>
+
+        <div class="filters-section">
+            <div class="filter-group">
+                <label>Programme:</label>
+                <select id="programmeFilter" onchange="filterParticipants()">
+                    <option value="">All Programmes</option>
+                    <option value="entrepreneurship">Entrepreneurship</option>
+                    <option value="skills">Skills Development</option>
+                    <option value="leadership">Leadership</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Status:</label>
+                <select id="statusFilter" onchange="filterParticipants()">
+                    <option value="">All Statuses</option>
+                    <option value="Active">Active</option>
+                    <option value="Completed">Completed</option>
+                    <option value="On Hold">On Hold</option>
+                    <option value="Dropped">Dropped</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <button class="action-btn secondary" onclick="clearFilters()">Clear Filters</button>
+            </div>
+        </div>
+
+        <div class="participants-grid" id="participantsGrid">
+            <!-- Dynamic content will be loaded here -->
+        </div>
+    </main>
+
+    <!-- Add Participant Modal -->
+    <div id="addParticipantModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add New Participant</h3>
+                <button class="modal-close" onclick="closeAddParticipantModal()">&times;</button>
+            </div>
+            <form id="addParticipantForm" onsubmit="addParticipant(event)">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="participantName">Full Name *</label>
+                        <input type="text" id="participantName" name="name" required class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="participantEmail">Email Address *</label>
+                        <input type="email" id="participantEmail" name="email" required class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="participantPhone">Phone Number</label>
+                        <input type="tel" id="participantPhone" name="phone" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="participantProgramme">Programme *</label>
+                        <select id="participantProgramme" name="programme" required class="form-input" onchange="handleProgrammeChange()">
+                            <option value="">Select Programme</option>
+                            <option value="entrepreneurship">Entrepreneurship Training</option>
+                            <option value="skills">Skills Development</option>
+                            <option value="leadership">Leadership Programme</option>
+                            <option value="custom">+ Add Custom Programme</option>
+                        </select>
+                        <input type="text" id="customProgrammeInput" name="customProgramme" class="form-input" placeholder="Enter custom programme name" style="display: none; margin-top: 0.5rem;">
+                    </div>
+                    <div class="form-group">
+                        <label for="participantStartDate">Start Date *</label>
+                        <input type="date" id="participantStartDate" name="startDate" required class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="participantNotes">Notes</label>
+                        <textarea id="participantNotes" name="notes" rows="3" class="form-input"></textarea>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="action-btn secondary" onclick="closeAddParticipantModal()">Cancel</button>
+                    <button type="submit" class="action-btn primary">Add Participant</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Participant Modal -->
+    <div id="editParticipantModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Participant</h3>
+                <button class="modal-close" onclick="closeEditParticipantModal()">&times;</button>
+            </div>
+            <form id="editParticipantForm" onsubmit="updateParticipant(event)">
+                <input type="hidden" id="editParticipantId">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="editParticipantName">Full Name *</label>
+                        <input type="text" id="editParticipantName" name="name" required class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="editParticipantEmail">Email *</label>
+                        <input type="email" id="editParticipantEmail" name="email" required class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="editParticipantPhone">Phone</label>
+                        <input type="tel" id="editParticipantPhone" name="phone" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="editParticipantProgramme">Programme *</label>
+                        <select id="editParticipantProgramme" name="programme" required class="form-input" onchange="handleEditProgrammeChange()">
+                            <option value="entrepreneurship">Entrepreneurship Training</option>
+                            <option value="skills">Skills Development</option>
+                            <option value="leadership">Leadership Programme</option>
+                            <option value="custom">+ Add Custom Programme</option>
+                        </select>
+                        <input type="text" id="editCustomProgrammeInput" name="editCustomProgramme" class="form-input" placeholder="Enter custom programme name" style="display: none; margin-top: 0.5rem;">
+                    </div>
+                    <div class="form-group">
+                        <label for="editParticipantStatus">Status</label>
+                        <select id="editParticipantStatus" name="status" class="form-input" onchange="handleStatusChange()">
+                            <option value="Active">Active</option>
+                            <option value="Completed">Completed</option>
+                            <option value="On Hold">On Hold</option>
+                            <option value="Dropped">Dropped</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="editParticipantProgressStatus">Progress Status</label>
+                        <select id="editParticipantProgressStatus" name="progressStatus" class="form-input">
+                            <option value="not-started">Haven't Started</option>
+                            <option value="in-progress">In Progress</option>
+                            <option value="completed">Completed</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="completionDateGroup">
+                        <label for="editParticipantCompletionDate">Completion Date *</label>
+                        <input type="date" id="editParticipantCompletionDate" name="completionDate" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editParticipantRevenue">Revenue (R)</label>
+                        <input type="number" id="editParticipantRevenue" name="revenue" min="0" step="0.01" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="editParticipantJobs">Jobs Created</label>
+                        <input type="number" id="editParticipantJobs" name="jobs" min="0" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="editParticipantAttendance">Attendance</label>
+                        <input type="number" id="editParticipantAttendance" name="attendance" min="0" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="editParticipantNotes">Notes</label>
+                        <textarea id="editParticipantNotes" name="notes" rows="3" class="form-input"></textarea>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="action-btn secondary" onclick="closeEditParticipantModal()">Cancel</button>
+                    <button type="submit" class="action-btn primary">Update Participant</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        var filteredParticipants = [];
+
+        // Load all participants when page loads
+        function loadParticipants() {
+            var participants = getParticipants();
+            filteredParticipants = participants.slice();
+            updateParticipantsDisplay();
+            updateProgrammeFilter();
+        }
+
+        // Display participants in the grid
+        function updateParticipantsDisplay() {
+            var grid = document.getElementById('participantsGrid');
+            if (!grid) return;
+
+            if (filteredParticipants.length === 0) {
+                var participants = getParticipants();
+                if (participants.length === 0) {
+                    // No participants at all
+                    grid.innerHTML = '<div class="empty-state"><div class="empty-icon"><h4>No Participants</h4></div><h3>No participants found</h3><p>Add your first participant to get started</p><button class="action-btn primary" onclick="showAddParticipantModal()">Add Participant</button></div>';
+                } else {
+                    // Participants exist but filters don't match
+                    grid.innerHTML = '<div class="empty-state"><div class="empty-icon"><h4>No Matches</h4></div><h3>No participants match your filters</h3><p>Try adjusting your search or filters</p><button class="action-btn secondary" onclick="clearFilters()">Clear Filters</button></div>';
+                }
+                return;
+            }
+
+            grid.innerHTML = filteredParticipants.map(function(participant) {
+                return '<div class="participant-card">' +
+                    '<div class="participant-header">' +
+                        '<div class="participant-avatar">' +
+                            participant.name.split(' ').map(function(n) { return n[0]; }).join('') +
+                        '</div>' +
+                        '<div class="participant-info">' +
+                            '<h4>' + participant.name + '</h4>' +
+                            '<p>' + participant.email + '</p>' +
+                        '</div>' +
+                        '<button class="participant-status-btn ' + participant.status.toLowerCase().replace(' ', '-') + '" onclick="toggleParticipantStatus(\'' + participant.id + '\')">' +
+                            participant.status +
+                        '</button>' +
+                    '</div>' +
+                    '<div class="participant-meta">' +
+                        '<div class="meta-item">' +
+                            '<span class="meta-label">Programme</span>' +
+                            '<span class="meta-value">' + formatProgrammeName(participant.programme) + '</span>' +
+                        '</div>' +
+                        '<div class="meta-item">' +
+                            '<span class="meta-label">Start Date</span>' +
+                            '<span class="meta-value">' + formatDate(participant.startDate) + '</span>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="participant-status-section">' +
+                        '<div class="status-header">' +
+                            '<span>Status</span>' +
+                            '<span class="status-date">' + getCompletionDate(participant) + '</span>' +
+                        '</div>' +
+                        '<div class="status-bar ' + getStatusClass(participant) + '">' +
+                            '<span class="status-text">' + getStatusText(participant) + '</span>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="participant-stats">' +
+                        '<div class="stat-item">' +
+                            '<span class="stat-label">Revenue</span>' +
+                            '<span class="stat-value">R' + (participant.revenue || 0).toLocaleString() + '</span>' +
+                        '</div>' +
+                        '<div class="stat-item">' +
+                            '<span class="stat-label">Jobs</span>' +
+                            '<span class="stat-value">' + (participant.jobs || 0) + '</span>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="participant-actions">' +
+                        '<button class="action-btn-small primary" onclick="editParticipant(\'' + participant.id + '\')">Edit</button>' +
+                        '<button class="action-btn-small secondary" onclick="removeParticipant(\'' + participant.id + '\')">Remove</button>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+        }
+
+        // Filter participants based on search and filters
+        function filterParticipants() {
+            var searchTerm = document.getElementById('searchParticipants').value.toLowerCase();
+            var programmeFilter = document.getElementById('programmeFilter').value;
+            var statusFilter = document.getElementById('statusFilter').value;
+
+            var participants = getParticipants();
+            
+            filteredParticipants = participants.filter(function(participant) {
+                var matchesSearch = !searchTerm || 
+                    participant.name.toLowerCase().indexOf(searchTerm) !== -1 ||
+                    participant.email.toLowerCase().indexOf(searchTerm) !== -1;
+                
+                var matchesProgramme = !programmeFilter || participant.programme === programmeFilter;
+                var matchesStatus = !statusFilter || participant.status === statusFilter;
+
+                return matchesSearch && matchesProgramme && matchesStatus;
+            });
+
+            updateParticipantsDisplay();
+        }
+
+        // Clear all filters
+        function clearFilters() {
+            document.getElementById('searchParticipants').value = '';
+            document.getElementById('programmeFilter').value = '';
+            document.getElementById('statusFilter').value = '';
+            loadParticipants();
+        }
+
+        // Edit participant
+        function editParticipant(id) {
+            var participants = getParticipants();
+            var participant = participants.find(function(p) { return p.id === id; });
+            
+            if (!participant) {
+                showNotification('Participant not found', 'error');
+                return;
+            }
+
+            document.getElementById('editParticipantId').value = participant.id;
+            document.getElementById('editParticipantName').value = participant.name;
+            document.getElementById('editParticipantEmail').value = participant.email;
+            document.getElementById('editParticipantPhone').value = participant.phone || '';
+            
+            // Handle programme selection (check if it's a custom programme)
+            var programmeSelect = document.getElementById('editParticipantProgramme');
+            var customInput = document.getElementById('editCustomProgrammeInput');
+            
+            // Check if the programme is one of the predefined options
+            var predefinedProgrammes = ['entrepreneurship', 'skills', 'leadership'];
+            if (predefinedProgrammes.includes(participant.programme)) {
+                programmeSelect.value = participant.programme;
+                customInput.style.display = 'none';
+                customInput.value = '';
+            } else {
+                // It's a custom programme
+                programmeSelect.value = 'custom';
+                customInput.value = participant.programme;
+                customInput.style.display = 'block';
+            }
+            document.getElementById('editParticipantStatus').value = participant.status;
+            
+            // Set progress status based on participant data
+            var progressStatus = 'not-started';
+            if (participant.status === 'Completed') {
+                progressStatus = 'completed';
+            } else if (participant.progressStatus) {
+                progressStatus = participant.progressStatus;
+            } else if (participant.progress > 0) {
+                progressStatus = 'in-progress';
+            }
+            document.getElementById('editParticipantProgressStatus').value = progressStatus;
+            
+            // Set completion date - use existing or calculate 7 months after start date
+            var completionDate = participant.completionDate;
+            if (!completionDate && participant.startDate) {
+                var startDate = new Date(participant.startDate);
+                startDate.setMonth(startDate.getMonth() + 7);
+                completionDate = startDate.toISOString().split('T')[0];
+            }
+            document.getElementById('editParticipantCompletionDate').value = completionDate || '';
+            
+            document.getElementById('editParticipantRevenue').value = participant.revenue || 0;
+            document.getElementById('editParticipantJobs').value = participant.jobs || 0;
+            document.getElementById('editParticipantAttendance').value = participant.attendance || 0;
+            document.getElementById('editParticipantNotes').value = participant.notes || '';
+
+            document.getElementById('editParticipantModal').classList.add('active');
+            
+            // Initialize status change handler
+            handleStatusChange();
+        }
+
+        // Close edit modal
+        function closeEditParticipantModal() {
+            document.getElementById('editParticipantModal').classList.remove('active');
+            
+            // Reset custom programme input
+            var customInput = document.getElementById('editCustomProgrammeInput');
+            if (customInput) {
+                customInput.style.display = 'none';
+                customInput.required = false;
+            }
+        }
+
+        // Update participant
+        function updateParticipant(event) {
+            event.preventDefault();
+            
+            // Validate completion date is always required
+            var completionDate = document.getElementById('editParticipantCompletionDate').value;
+            
+            if (!completionDate) {
+                showNotification('Completion date is required', 'error');
+                return;
+            }
+            
+            var participants = getParticipants();
+            var id = document.getElementById('editParticipantId').value;
+            var participantIndex = -1;
+            
+            for (var i = 0; i < participants.length; i++) {
+                if (participants[i].id === id) {
+                    participantIndex = i;
+                    break;
+                }
+            }
+            
+            if (participantIndex === -1) {
+                showNotification('Participant not found', 'error');
+                return;
+            }
+
+            participants[participantIndex].name = document.getElementById('editParticipantName').value;
+            participants[participantIndex].email = document.getElementById('editParticipantEmail').value;
+            participants[participantIndex].phone = document.getElementById('editParticipantPhone').value;
+            
+            // Handle custom programme
+            var programmeSelect = document.getElementById('editParticipantProgramme');
+            var customInput = document.getElementById('editCustomProgrammeInput');
+            participants[participantIndex].programme = getProgrammeValue(programmeSelect, customInput);
+            participants[participantIndex].status = document.getElementById('editParticipantStatus').value;
+            participants[participantIndex].progressStatus = document.getElementById('editParticipantProgressStatus').value;
+            participants[participantIndex].completionDate = document.getElementById('editParticipantCompletionDate').value;
+            participants[participantIndex].revenue = parseFloat(document.getElementById('editParticipantRevenue').value) || 0;
+            participants[participantIndex].jobs = parseInt(document.getElementById('editParticipantJobs').value) || 0;
+            participants[participantIndex].attendance = parseInt(document.getElementById('editParticipantAttendance').value) || 0;
+            participants[participantIndex].notes = document.getElementById('editParticipantNotes').value;
+            participants[participantIndex].updatedAt = new Date().toISOString();
+
+            saveParticipants(participants);
+            closeEditParticipantModal();
+            loadParticipants();
+            
+            // Update success rate if participant status changed to completed
+            if (participants[participantIndex].status === 'Completed') {
+                refreshAllPages();
+            }
+            
+            showNotification('Participant updated successfully!', 'success');
+        }
+
+        // Toggle participant status
+        function toggleParticipantStatus(participantId) {
+            var participants = getParticipants();
+            var participantIndex = participants.findIndex(function(p) { return p.id === participantId; });
+            
+            if (participantIndex === -1) {
+                showNotification('Participant not found', 'error');
+                return;
+            }
+            
+            var currentStatus = participants[participantIndex].status;
+            var statusOrder = ['Active', 'Completed', 'On Hold', 'Dropped'];
+            var currentIndex = statusOrder.indexOf(currentStatus);
+            var nextIndex = (currentIndex + 1) % statusOrder.length;
+            var newStatus = statusOrder[nextIndex];
+            
+            participants[participantIndex].status = newStatus;
+            participants[participantIndex].updatedAt = new Date().toISOString();
+            
+            saveParticipants(participants);
+            loadParticipants();
+            
+            // Update success rate if status changed to completed
+            if (newStatus === 'Completed') {
+                refreshAllPages();
+            }
+            
+            showNotification('Status changed to ' + newStatus, 'success');
+        }
+
+        // Toggle search functionality
+        function toggleSearch() {
+            var searchInput = document.getElementById('searchParticipants');
+            var searchBtn = document.querySelector('.search-toggle-btn');
+            
+            if (searchInput.classList.contains('show')) {
+                searchInput.classList.remove('show');
+                searchInput.value = '';
+                searchBtn.textContent = 'Search';
+                filterParticipants(); // Clear search results
+            } else {
+                searchInput.classList.add('show');
+                searchInput.focus();
+                searchBtn.textContent = 'Close';
+            }
+        }
+
+        // Helper functions for status display
+        function getStatusText(participant) {
+            if (participant.progressStatus) {
+                switch(participant.progressStatus) {
+                    case 'completed':
+                        return 'Completed';
+                    case 'in-progress':
+                        return 'In Progress';
+                    case 'not-started':
+                        return 'Haven\'t Started';
+                    default:
+                        return 'Haven\'t Started';
+                }
+            } else if (participant.status === 'Completed') {
+                return 'Completed';
+            } else {
+                return 'Haven\'t Started';
+            }
+        }
+
+        function getStatusClass(participant) {
+            if (participant.progressStatus) {
+                switch(participant.progressStatus) {
+                    case 'completed':
+                        return 'status-completed';
+                    case 'in-progress':
+                        return 'status-in-progress';
+                    case 'not-started':
+                        return 'status-not-started';
+                    default:
+                        return 'status-not-started';
+                }
+            } else if (participant.status === 'Completed') {
+                return 'status-completed';
+            } else {
+                return 'status-not-started';
+            }
+        }
+
+        function getCompletionDate(participant) {
+            if (participant.completionDate) {
+                return formatDate(participant.completionDate);
+            } else {
+                return 'No date set';
+            }
+        }
+
+        // Handle status change in edit modal
+        function handleStatusChange() {
+            var statusSelect = document.getElementById('editParticipantStatus');
+            var completionDateInput = document.getElementById('editParticipantCompletionDate');
+            var completionDateGroup = document.getElementById('completionDateGroup');
+            
+            // Always show completion date field and make it required
+            completionDateGroup.style.display = 'block';
+            completionDateInput.required = true;
+            
+            // If no completion date is set, calculate 7 months after start date
+            if (!completionDateInput.value) {
+                // Try to get start date from the participant data
+                var participantId = document.getElementById('editParticipantId').value;
+                if (participantId) {
+                    var participants = getParticipants();
+                    var participant = participants.find(function(p) { return p.id === participantId; });
+                    if (participant && participant.startDate) {
+                        var startDate = new Date(participant.startDate);
+                        startDate.setMonth(startDate.getMonth() + 7);
+                        completionDateInput.value = startDate.toISOString().split('T')[0];
+                    } else {
+                        // Fallback to today if no start date available
+                        var today = new Date().toISOString().split('T')[0];
+                        completionDateInput.value = today;
+                    }
+                }
+            }
+        }
+
+        // Handle programme selection change in add modal
+        function handleProgrammeChange() {
+            var programmeSelect = document.getElementById('participantProgramme');
+            var customInput = document.getElementById('customProgrammeInput');
+            
+            if (programmeSelect.value === 'custom') {
+                customInput.style.display = 'block';
+                customInput.required = true;
+                customInput.focus();
+            } else {
+                customInput.style.display = 'none';
+                customInput.required = false;
+                customInput.value = '';
+            }
+        }
+
+        // Handle programme selection change in edit modal
+        function handleEditProgrammeChange() {
+            var programmeSelect = document.getElementById('editParticipantProgramme');
+            var customInput = document.getElementById('editCustomProgrammeInput');
+            
+            if (programmeSelect.value === 'custom') {
+                customInput.style.display = 'block';
+                customInput.required = true;
+                customInput.focus();
+            } else {
+                customInput.style.display = 'none';
+                customInput.required = false;
+                customInput.value = '';
+            }
+        }
+
+        // Get the actual programme value (handles custom programmes)
+        function getProgrammeValue(programmeSelect, customInput) {
+            if (programmeSelect.value === 'custom') {
+                return customInput.value.trim();
+            }
+            return programmeSelect.value;
+        }
+
+        // Update programme filter with all available programmes
+        function updateProgrammeFilter() {
+            var participants = getParticipants();
+            var programmeFilter = document.getElementById('programmeFilter');
+            var uniqueProgrammes = [...new Set(participants.map(p => p.programme))];
+            
+            // Keep the "All Programmes" option
+            var currentValue = programmeFilter.value;
+            programmeFilter.innerHTML = '<option value="">All Programmes</option>';
+            
+            // Add predefined programmes
+            var predefinedProgrammes = [
+                { value: 'entrepreneurship', label: 'Entrepreneurship Training' },
+                { value: 'skills', label: 'Skills Development' },
+                { value: 'leadership', label: 'Leadership Programme' }
+            ];
+            
+            predefinedProgrammes.forEach(function(prog) {
+                if (uniqueProgrammes.includes(prog.value)) {
+                    var option = document.createElement('option');
+                    option.value = prog.value;
+                    option.textContent = prog.label;
+                    programmeFilter.appendChild(option);
+                }
+            });
+            
+            // Add custom programmes
+            uniqueProgrammes.forEach(function(programme) {
+                if (!['entrepreneurship', 'skills', 'leadership'].includes(programme)) {
+                    var option = document.createElement('option');
+                    option.value = programme;
+                    option.textContent = programme;
+                    programmeFilter.appendChild(option);
+                }
+            });
+            
+            // Restore previous selection if it still exists
+            if (currentValue && uniqueProgrammes.includes(currentValue)) {
+                programmeFilter.value = currentValue;
+            }
+        }
+
+        // Initialize page
+        window.addEventListener('DOMContentLoaded', function() {
+            loadParticipants();
+            updateProgrammeFilter();
+            
+            // Check if we need to open edit modal from URL parameter (from dashboard)
+            var urlParams = new URLSearchParams(window.location.search);
+            var editId = urlParams.get('edit');
+            if (editId) {
+                setTimeout(function() {
+                    editParticipant(editId);
+                }, 100);
+            }
+        });
+    </script>
+</body>
+</html> 
